@@ -884,6 +884,11 @@ public abstract class DbSqlSession extends AbstractPersistenceSession {
           return true;
         }
 
+        // Message returned from XuGu and CAE
+        if ((exceptionMessage.contains("E5021") || exceptionMessage.contains("表或视图")) && (exceptionMessage.contains("不存在"))) {
+          return true;
+        }
+
         // Message returned from Postgres
         return (exceptionMessage.contains("relation") || exceptionMessage.contains("table")) && (exceptionMessage.contains("does not exist"));
       }

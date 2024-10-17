@@ -1671,6 +1671,8 @@ public abstract class ProcessEngineConfigurationImpl extends ProcessEngineConfig
   protected static Properties databaseTypeMappings = getDefaultDatabaseTypeMappings();
   protected static final String MY_SQL_PRODUCT_NAME = "MySQL";
   protected static final String MARIA_DB_PRODUCT_NAME = "MariaDB";
+  protected static final String XUGU_PRODUCT_NAME = "XuguDB";
+  protected static final String CAE_PRODUCT_NAME = "CAEDB SQL Server";
   protected static final String POSTGRES_DB_PRODUCT_NAME = "PostgreSQL";
   protected static final String CRDB_DB_PRODUCT_NAME = "CockroachDB";
 
@@ -1679,6 +1681,8 @@ public abstract class ProcessEngineConfigurationImpl extends ProcessEngineConfig
     databaseTypeMappings.setProperty("H2", "h2");
     databaseTypeMappings.setProperty(MY_SQL_PRODUCT_NAME, "mysql");
     databaseTypeMappings.setProperty(MARIA_DB_PRODUCT_NAME, "mariadb");
+    databaseTypeMappings.setProperty(XUGU_PRODUCT_NAME, "xugu");
+    databaseTypeMappings.setProperty(CAE_PRODUCT_NAME, "cae");
     databaseTypeMappings.setProperty("Oracle", "oracle");
     databaseTypeMappings.setProperty(POSTGRES_DB_PRODUCT_NAME, "postgres");
     databaseTypeMappings.setProperty(CRDB_DB_PRODUCT_NAME, "cockroachdb");

@@ -42,8 +42,10 @@ public class DbSqlSessionFactory implements SessionFactory {
   public static final String MYSQL = "mysql";
   public static final String POSTGRES = "postgres";
   public static final String MARIADB = "mariadb";
+  public static final String XUGU = "xugu";
+  public static final String CAE = "cae";
   public static final String CRDB = "cockroachdb";
-  public static final String[] SUPPORTED_DATABASES = {MSSQL, DB2, ORACLE, H2, MYSQL, POSTGRES, MARIADB, CRDB};
+  public static final String[] SUPPORTED_DATABASES = {MSSQL, DB2, ORACLE, H2, MYSQL, POSTGRES, MARIADB, XUGU, CAE, CRDB};
 
   protected static final Map<String, Map<String, String>> databaseSpecificStatements = new HashMap<>();
 
@@ -484,6 +486,97 @@ public class DbSqlSessionFactory implements SessionFactory {
     constants.put("constant.integer.cast", "NULL");
     constants.put("constant.null.reporter", "NULL AS REPORTER_");
     dbSpecificConstants.put(ORACLE, constants);
+
+    // xugu, cae
+    for (String xuguLikeDatabase : Arrays.asList(XUGU, CAE)) {
+      databaseSpecificLimitBeforeStatements.put(xuguLikeDatabase, "select * from ( select a.*, ROWNUM rnum from (");
+      optimizeDatabaseSpecificLimitBeforeWithoutOffsetStatements.put(xuguLikeDatabase, "select * from ( select a.*, ROWNUM rnum from (");
+      databaseSpecificLimitAfterStatements.put(xuguLikeDatabase, "  ) a where ROWNUM < #{lastRow}) where rnum  >= #{firstRow}");
+      optimizeDatabaseSpecificLimitAfterWithoutOffsetStatements.put(xuguLikeDatabase, "  ) a where ROWNUM <= #{maxResults})");
+      databaseSpecificLimitBeforeWithoutOffsetStatements.put(xuguLikeDatabase, "");
+      databaseSpecificLimitAfterWithoutOffsetStatements.put(xuguLikeDatabase, "AND ROWNUM <= #{maxResults}");
+      databaseSpecificInnerLimitAfterStatements.put(xuguLikeDatabase, databaseSpecificLimitAfterStatements.get(xuguLikeDatabase));
+      databaseSpecificLimitBetweenStatements.put(xuguLikeDatabase, "");
+      databaseSpecificLimitBetweenFilterStatements.put(xuguLikeDatabase, "");
+      databaseSpecificLimitBetweenAcquisitionStatements.put(xuguLikeDatabase, "");
+      databaseSpecificOrderByStatements.put(xuguLikeDatabase, defaultOrderBy);
+      databaseSpecificLimitBeforeNativeQueryStatements.put(xuguLikeDatabase, "");
+      databaseSpecificDistinct.put(xuguLikeDatabase, "distinct");
+      databaseSpecificNumericCast.put(xuguLikeDatabase, "");
+
+      databaseSpecificCountDistinctBeforeStart.put(xuguLikeDatabase, defaultDistinctCountBeforeStart);
+      databaseSpecificCountDistinctBeforeEnd.put(xuguLikeDatabase, defaultDistinctCountBeforeEnd);
+      databaseSpecificCountDistinctAfterEnd.put(xuguLikeDatabase, defaultDistinctCountAfterEnd);
+
+      databaseSpecificEscapeChar.put(xuguLikeDatabase, defaultEscapeChar);
+
+      databaseSpecificDummyTable.put(xuguLikeDatabase, "FROM DUAL");
+      databaseSpecificBitAnd1.put(xuguLikeDatabase, "BITAND(");
+      databaseSpecificBitAnd2.put(xuguLikeDatabase, ",");
+      databaseSpecificBitAnd3.put(xuguLikeDatabase, ")");
+      databaseSpecificDatepart1.put(xuguLikeDatabase, "to_number(to_char(");
+      databaseSpecificDatepart2.put(xuguLikeDatabase, ",");
+      databaseSpecificDatepart3.put(xuguLikeDatabase, "))");
+
+      databaseSpecificTrueConstant.put(xuguLikeDatabase, "1");
+      databaseSpecificFalseConstant.put(xuguLikeDatabase, "0");
+      databaseSpecificIfNull.put(xuguLikeDatabase, "NVL");
+
+      databaseSpecificDaysComparator.put(xuguLikeDatabase, "DATEDIFF(#{currentTimestamp}, ${date}) >= ${days}");
+
+      databaseSpecificCollationForCaseSensitivity.put(xuguLikeDatabase, "");
+
+      databaseSpecificAuthJoinStart.put(xuguLikeDatabase, defaultAuthOnStart);
+      databaseSpecificAuthJoinEnd.put(xuguLikeDatabase, defaultAuthOnEnd);
+      databaseSpecificAuthJoinSeparator.put(xuguLikeDatabase, defaultAuthOnSeparator);
+
+      databaseSpecificAuth1JoinStart.put(xuguLikeDatabase, defaultAuthOnStart);
+      databaseSpecificAuth1JoinEnd.put(xuguLikeDatabase, defaultAuthOnEnd);
+      databaseSpecificAuth1JoinSeparator.put(xuguLikeDatabase, defaultAuthOnSeparator);
+
+      addDatabaseSpecificStatement(xuguLikeDatabase, "selectHistoricProcessInstanceDurationReport", "selectHistoricProcessInstanceDurationReport_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "selectHistoricTaskInstanceDurationReport", "selectHistoricTaskInstanceDurationReport_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "selectHistoricTaskInstanceCountByTaskNameReport", "selectHistoricTaskInstanceCountByTaskNameReport_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "selectFilterByQueryCriteria", "selectFilterByQueryCriteria_oracleDb2");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "selectHistoricProcessInstanceIdsForCleanup", "selectHistoricProcessInstanceIdsForCleanup_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "selectHistoricDecisionInstanceIdsForCleanup", "selectHistoricDecisionInstanceIdsForCleanup_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "selectHistoricCaseInstanceIdsForCleanup", "selectHistoricCaseInstanceIdsForCleanup_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "selectHistoricBatchIdsForCleanup", "selectHistoricBatchIdsForCleanup_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "selectTaskMetricIdsForCleanup", "selectTaskMetricIdsForCleanup_oracle");
+
+      addDatabaseSpecificStatement(xuguLikeDatabase, "deleteAttachmentsByRemovalTime", "deleteAttachmentsByRemovalTime_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "deleteCommentsByRemovalTime", "deleteCommentsByRemovalTime_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "deleteHistoricActivityInstancesByRemovalTime", "deleteHistoricActivityInstancesByRemovalTime_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "deleteHistoricDecisionInputInstancesByRemovalTime", "deleteHistoricDecisionInputInstancesByRemovalTime_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "deleteHistoricDecisionInstancesByRemovalTime", "deleteHistoricDecisionInstancesByRemovalTime_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "deleteHistoricDecisionOutputInstancesByRemovalTime", "deleteHistoricDecisionOutputInstancesByRemovalTime_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "deleteHistoricDetailsByRemovalTime", "deleteHistoricDetailsByRemovalTime_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "deleteExternalTaskLogByRemovalTime", "deleteExternalTaskLogByRemovalTime_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "deleteHistoricIdentityLinkLogByRemovalTime", "deleteHistoricIdentityLinkLogByRemovalTime_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "deleteHistoricIncidentsByRemovalTime", "deleteHistoricIncidentsByRemovalTime_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "deleteJobLogByRemovalTime", "deleteJobLogByRemovalTime_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "deleteHistoricProcessInstancesByRemovalTime", "deleteHistoricProcessInstancesByRemovalTime_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "deleteHistoricTaskInstancesByRemovalTime", "deleteHistoricTaskInstancesByRemovalTime_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "deleteHistoricVariableInstancesByRemovalTime", "deleteHistoricVariableInstancesByRemovalTime_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "deleteUserOperationLogByRemovalTime", "deleteUserOperationLogByRemovalTime_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "deleteByteArraysByRemovalTime", "deleteByteArraysByRemovalTime_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "deleteHistoricBatchesByRemovalTime", "deleteHistoricBatchesByRemovalTime_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "deleteAuthorizationsByRemovalTime", "deleteAuthorizationsByRemovalTime_oracle");
+      addDatabaseSpecificStatement(xuguLikeDatabase, "deleteTaskMetricsByRemovalTime", "deleteTaskMetricsByRemovalTime_oracle");
+
+      constants = new HashMap<>();
+      constants.put("constant.event", "cast('event' as nvarchar2(255))");
+      constants.put("constant.op_message", "NEW_VALUE_ || '_|_' || PROPERTY_");
+      constants.put("constant_for_update", "for update");
+      constants.put("constant.datepart.quarter", "'Q'");
+      constants.put("constant.datepart.month", "'MM'");
+      constants.put("constant.datepart.minute", "'MI'");
+      constants.put("constant.null.startTime", "null START_TIME_");
+      constants.put("constant.varchar.cast", "'${key}'");
+      constants.put("constant.integer.cast", "NULL");
+      constants.put("constant.null.reporter", "NULL AS REPORTER_");
+      dbSpecificConstants.put(xuguLikeDatabase, constants);
+    }
 
     // db2
     databaseSpecificLimitBeforeStatements.put(DB2, "SELECT SUB.* FROM (");

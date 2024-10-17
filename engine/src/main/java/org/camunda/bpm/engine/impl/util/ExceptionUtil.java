@@ -28,6 +28,7 @@ import org.camunda.bpm.engine.impl.context.Context;
 import org.camunda.bpm.engine.impl.persistence.entity.ByteArrayEntity;
 import org.camunda.bpm.engine.repository.ResourceType;
 
+import static org.camunda.bpm.engine.impl.util.ExceptionUtil.DEADLOCK_CODES.CAE;
 import static org.camunda.bpm.engine.impl.util.ExceptionUtil.DEADLOCK_CODES.CRDB;
 import static org.camunda.bpm.engine.impl.util.ExceptionUtil.DEADLOCK_CODES.DB2;
 import static org.camunda.bpm.engine.impl.util.ExceptionUtil.DEADLOCK_CODES.H2;
@@ -35,6 +36,7 @@ import static org.camunda.bpm.engine.impl.util.ExceptionUtil.DEADLOCK_CODES.MARI
 import static org.camunda.bpm.engine.impl.util.ExceptionUtil.DEADLOCK_CODES.ORACLE;
 import static org.camunda.bpm.engine.impl.util.ExceptionUtil.DEADLOCK_CODES.POSTGRES;
 import static org.camunda.bpm.engine.impl.util.ExceptionUtil.DEADLOCK_CODES.MSSQL;
+import static org.camunda.bpm.engine.impl.util.ExceptionUtil.DEADLOCK_CODES.XUGU;
 
 /**
  * @author Roman Smirnov
@@ -143,6 +145,7 @@ public class ExceptionUtil {
   public static boolean checkValueTooLongException(SQLException sqlException) {
     String message = sqlException.getMessage();
     return message.contains("too long") ||
+        message.startsWith("[E17090]") ||
         message.contains("too large") ||
         message.contains("TOO LARGE") ||
         message.contains("ORA-01461") ||
@@ -200,6 +203,12 @@ public class ExceptionUtil {
           "23000".equals(sqlState) && errorCode == 547 ||
           // MySql & MariaDB & PostgreSQL
           "23000".equals(sqlState) && errorCode == 1452 ||
+          // cae
+          "cae13005".equals(sqlState) && errorCode == 13005 ||
+          "cae5058".equals(sqlState) && errorCode == 5058 ||
+          // xugu
+          "xugu13005".equals(sqlState) && errorCode == 13005 ||
+          "xugu5058".equals(sqlState) && errorCode == 5058 ||
           // Oracle & H2
           message.contains("integrity constraint") ||
           // Oracle
@@ -225,7 +234,11 @@ public class ExceptionUtil {
 
     // MySQL & MariaDB
     return (message.contains("act_uniq_variable") && "23000".equals(sqlState) && errorCode == 1062)
-        // PostgreSQL
+        // XuGu
+        || (message.contains("[e13001] 违反唯一值约束") && "XUGU13001".equals(sqlState) && errorCode == 13001)
+        // CAE
+        || (message.contains("[e13001] 违反唯一值约束") && "CAE13001".equals(sqlState) && errorCode == 13001)
+        // PostgreSQL+
         || (message.contains("act_uniq_variable") && "23505".equals(sqlState) && errorCode == 0)
         // SqlServer
         || (message.contains("act_uniq_variable") && "23000".equals(sqlState) && errorCode == 2601)
@@ -273,6 +286,8 @@ public class ExceptionUtil {
   public enum DEADLOCK_CODES {
 
     MARIADB_MYSQL(1213, "40001"),
+    XUGU(14001, "xugu14001"),
+    CAE(14001, "cae14001"),
     MSSQL(1205, "40001"),
     DB2(-911, "40001"),
     ORACLE(60, "61000"),
@@ -314,6 +329,8 @@ public class ExceptionUtil {
 
     return MARIADB_MYSQL.equals(errorCode, sqlState) ||
         MSSQL.equals(errorCode, sqlState) ||
+        XUGU.equals(errorCode, sqlState) ||
+        CAE.equals(errorCode, sqlState) ||
         DB2.equals(errorCode, sqlState) ||
         ORACLE.equals(errorCode, sqlState) ||
         POSTGRES.equals(errorCode, sqlState) ||

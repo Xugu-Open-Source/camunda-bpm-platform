@@ -30,6 +30,8 @@
   <property name="db.name" value="mysql" dbms="mysql"/>
   <property name="db.name" value="oracle" dbms="oracle"/>
   <property name="db.name" value="postgres" dbms="postgresql"/>
+  <property name="db.name" value="xugu" dbms="xugudb"/>
+  <property name="db.name" value="cae" dbms="caedb sql server"/>
 
   <changeSet author="Camunda" id="7.16.0-baseline">
     <sqlFile path="baseline/liquibase.${db.name}.create.engine.sql"
